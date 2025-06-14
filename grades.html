@@ -1,0 +1,224 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Marks & Grades Entry</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    input, select {
+      width: 90%;
+      padding: 5px;
+    }
+
+    .overall-percentage, #statusMsg {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .overall-percentage {
+      background-color: #f0fff0;
+      text-align: center;
+    }
+
+    #statusMsg.success {
+      background-color: #e6ffe6;
+      color: #006600;
+      border: 1px solid #99cc99;
+    }
+
+    #statusMsg.error {
+      background-color: #ffe6e6;
+      color: #cc0000;
+      border: 1px solid #ff9999;
+    }
+
+    #studentID {
+      border-left: 5px solid #ff6666;
+      background-color: #fffdf0;
+    }
+
+    button {
+      margin: 10px 10px 0 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Marks and Grades Entry Section</h2>
+
+    <label><strong>Student Enrollment ID (required):</strong></label>
+    <input type="text" id="studentID" placeholder="Enter Enrollment ID" oninput="enableEntry()">
+
+    <label><strong>CGPA:</strong></label>
+    <input type="number" step="0.01" id="cgpa" placeholder="Enter CGPA">
+
+    <!-- Total Marks field removed here -->
+
+    <table id="marksTable" style="opacity: 0.5; pointer-events: none;">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Marks Obtained</th>
+          <th>Total Marks</th>
+          <th>Percentage</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="marksBody"></tbody>
+    </table>
+
+    <button id="addRowBtn" onclick="addRow()" disabled>Add Subject</button>
+    <button id="saveBtn" onclick="saveAll()" disabled>Save Details</button>
+
+    <div class="overall-percentage" id="overallPercentage">Overall Percentage: 0%</div>
+    <div id="statusMsg"></div>
+
+    <a href="index.html">&larr; Back to Dashboard</a>
+  </div>
+
+  <script>
+    function enableEntry() {
+      const id = document.getElementById("studentID").value.trim();
+      const table = document.getElementById("marksTable");
+      const addBtn = document.getElementById("addRowBtn");
+      const saveBtn = document.getElementById("saveBtn");
+
+      if (id) {
+        table.style.opacity = "1";
+        table.style.pointerEvents = "auto";
+        addBtn.disabled = false;
+        saveBtn.disabled = false;
+      } else {
+        table.style.opacity = "0.5";
+        table.style.pointerEvents = "none";
+        addBtn.disabled = true;
+        saveBtn.disabled = true;
+      }
+    }
+
+    function addRow() {
+      const tbody = document.getElementById("marksBody");
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td><input type="text" placeholder="Subject" required></td>
+        <td><input type="number" min="0" placeholder="Marks Obtained" oninput="calculatePercentages()"></td>
+        <td><input type="number" min="1" placeholder="Total Marks" oninput="calculatePercentages()"></td>
+        <td class="subject-percentage">0%</td>
+        <td><button onclick="removeRow(this)">Remove</button></td>
+      `;
+
+      tbody.appendChild(row);
+    }
+
+    function removeRow(btn) {
+      btn.closest("tr").remove();
+      calculatePercentages();
+    }
+
+    function calculatePercentages() {
+      const rows = document.querySelectorAll("#marksBody tr");
+      let totalObtained = 0, totalPossible = 0;
+
+      rows.forEach(row => {
+        const inputs = row.querySelectorAll("input");
+        const obtained = parseFloat(inputs[1].value) || 0;
+        const total = parseFloat(inputs[2].value) || 0;
+        const percentCell = row.querySelector(".subject-percentage");
+
+        const percent = total > 0 ? (obtained / total) * 100 : 0;
+        percentCell.textContent = `${percent.toFixed(2)}%`;
+
+        totalObtained += obtained;
+        totalPossible += total;
+      });
+
+      const overall = totalPossible > 0 ? (totalObtained / totalPossible) * 100 : 0;
+      document.getElementById("overallPercentage").textContent = `Overall Percentage: ${overall.toFixed(2)}%`;
+      return overall;
+    }
+
+    function saveAll() {
+      const studentID = document.getElementById("studentID").value.trim();
+      const cgpa = parseFloat(document.getElementById("cgpa").value);
+      const statusMsg = document.getElementById("statusMsg");
+
+      if (!studentID) {
+        statusMsg.textContent = "Student ID is required.";
+        statusMsg.className = "error";
+        return;
+      }
+
+      const rows = document.querySelectorAll("#marksBody tr");
+      const subjects = [];
+
+      for (let row of rows) {
+        const inputs = row.querySelectorAll("input");
+        const subject = inputs[0].value.trim();
+        const obtained = parseFloat(inputs[1].value) || 0;
+        const total = parseFloat(inputs[2].value) || 0;
+
+        if (!subject || total <= 0) {
+          statusMsg.textContent = "Please fill all subject fields correctly.";
+          statusMsg.className = "error";
+          return;
+        }
+
+        subjects.push({
+          subject,
+          marksObtained: obtained,
+          totalMarks: total,
+          percentage: ((obtained / total) * 100).toFixed(2)
+        });
+      }
+
+      const overallPercentage = calculatePercentages();
+
+      // Update student in localStorage
+      const students = JSON.parse(localStorage.getItem("students") || "[]");
+      const student = students.find(s => s.studentID === studentID);
+      if (!student) {
+        statusMsg.textContent = "Student not found in system.";
+        statusMsg.className = "error";
+        return;
+      }
+
+      student.cgpa = isNaN(cgpa) ? student.cgpa : cgpa;
+      student.subjects = subjects;
+      student.overallPercentage = overallPercentage.toFixed(2);
+
+      localStorage.setItem("students", JSON.stringify(students));
+      statusMsg.textContent = "Marks and grade details saved successfully!";
+      statusMsg.className = "success";
+
+      if (student.parentMobile) {
+        alert(`Notification sent to parent (${student.parentMobile}): Your child ${student.name} has Overall %: ${overallPercentage.toFixed(2)}%.`);
+      }
+    }
+  </script>
+</body>
+</html>
+

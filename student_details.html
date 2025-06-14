@@ -1,0 +1,105 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Details</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .highlight {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    #studentDetails {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Student Details</h2>
+
+    <input type="text" id="studentID" placeholder="Enter student ID">
+    <button onclick="viewStudentDetails()">View Details</button>
+
+    <div id="studentDetails"></div>
+    <a href="index.html">&larr; Back to Dashboard</a>
+  </div>
+
+  <script>
+    function viewStudentDetails() {
+      const studentID = document.getElementById("studentID").value.trim();
+      const students = JSON.parse(localStorage.getItem("students") || "[]");
+      const student = students.find(s => s.studentID === studentID);
+      const container = document.getElementById("studentDetails");
+
+      if (!student) {
+        alert("Student not found");
+        container.innerHTML = "";
+        return;
+      }
+
+      let subjectTable = "";
+      if (student.subjects && student.subjects.length > 0) {
+        subjectTable += `
+          <h3>Subject-wise Marks</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Marks Obtained</th>
+                <th>Total Marks</th>
+                <th>Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        student.subjects.forEach(sub => {
+          subjectTable += `
+            <tr>
+              <td>${sub.subject}</td>
+              <td>${sub.marksObtained}</td>
+              <td>${sub.totalMarks}</td>
+              <td>${sub.percentage}%</td>
+            </tr>
+          `;
+        });
+
+        subjectTable += `</tbody></table>`;
+      }
+
+      container.innerHTML = `
+        <p><strong>Student ID:</strong> ${student.studentID}</p>
+        <p><strong>Name:</strong> ${student.name}</p>
+        <p><strong>Parent's Mobile:</strong> ${student.parentMobile || "N/A"}</p>
+        <p><strong>CGPA:</strong> ${student.cgpa ?? "N/A"}</p>
+        <p><strong>Overall Percentage:</strong> ${student.overallPercentage ?? "N/A"}%</p>
+        ${subjectTable}
+      `;
+    }
+  </script>
+</body>
+</html>
+

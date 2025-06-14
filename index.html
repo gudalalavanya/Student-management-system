@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Management System</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    #welcomeMsg {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Student Management System</h1>
+    <div id="welcomeMsg"></div>
+
+    <nav class="nav-links">
+      <a href="enroll.html">Student Enrollment</a>
+      <a href="attendance.html">Attendance Tracking</a>
+      <a href="grades.html">Grade Management</a>
+      <a href="communication.html">Communication</a>
+      <a href="student_details.html">View Student Details</a>
+    </nav>
+  </div>
+
+  <script>
+    const welcomeMsg = document.getElementById('welcomeMsg');
+    const now = new Date();
+    const hours = now.getHours();
+    let greeting;
+
+    if (hours < 12) greeting = "Good Morning!";
+    else if (hours < 18) greeting = "Good Afternoon!";
+    else greeting = "Good Evening!";
+
+    welcomeMsg.textContent = `${greeting} Today is ${now.toDateString()}.`;
+  </script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Subject Marks Table</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    input[type="text"], input[type="number"] {
+      width: 90%;
+      padding: 5px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .overall-percentage {
+      font-weight: bold;
+      margin-top: 15px;
+      background-color: #f0fff0;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    button {
+      margin-top: 10px;
+      margin-right: 10px;
+    }
+
+    #studentID {
+      border-left: 5px solid #ff6666;
+      background-color: #fffdf0;
+    }
+
+    #idWarning {
+      color: #cc0000;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    #statusMsg {
+      margin-top: 10px;
+      padding: 10px;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+
+    #statusMsg.success {
+      background-color: #e6ffe6;
+      color: #006600;
+      border: 1px solid #99cc99;
+    }
+
+    #statusMsg.error {
+      background-color: #ffe6e6;
+      color: #cc0000;
+      border: 1px solid #ff9999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Enter Marks for Each Subject</h2>
+
+    <label for="studentID"><strong>Student Enrollment ID (required):</strong></label>
+    <input type="text" id="studentID" placeholder="Enter Enrollment ID" required oninput="enableTable()">
+    <p id="idWarning">Please enter Enrollment ID to begin entering marks.</p>
+
+    <table id="marksTable" style="opacity: 0.5; pointer-events: none;">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Marks Obtained</th>
+          <th>Total Marks</th>
+          <th>Percentage</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="marksBody">
+        <!-- Rows will be added here -->
+      </tbody>
+    </table>
+
+    <button id="addRowBtn" onclick="addRow()" disabled>Add Subject</button>
+    <button id="saveBtn" onclick="saveMarks()" disabled>Save Details</button>
+
+    <div class="overall-percentage" id="overallPercentage">Overall Percentage: 0%</div>
+    <div id="statusMsg"></div>
+
+    <a href="index.html">&larr; Back to Dashboard</a>
+  </div>
+
+  <script>
+    function enableTable() {
+      const studentID = document.getElementById("studentID").value.trim();
+      const table = document.getElementById("marksTable");
+      const addBtn = document.getElementById("addRowBtn");
+      const saveBtn = document.getElementById("saveBtn");
+      const warning = document.getElementById("idWarning");
+
+      if (studentID) {
+        table.style.opacity = "1";
+        table.style.pointerEvents = "auto";
+        addBtn.disabled = false;
+        saveBtn.disabled = false;
+        warning.style.display = "none";
+      } else {
+        table.style.opacity = "0.5";
+        table.style.pointerEvents = "none";
+        addBtn.disabled = true;
+        saveBtn.disabled = true;
+        warning.style.display = "block";
+      }
+    }
+
+    function addRow() {
+      const tbody = document.getElementById("marksBody");
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td><input type="text" placeholder="Subject" required></td>
+        <td><input type="number" min="0" placeholder="Marks Obtained" oninput="calculatePercentages()"></td>
+        <td><input type="number" min="1" placeholder="Total Marks" oninput="calculatePercentages()"></td>
+        <td class="subject-percentage">0%</td>
+        <td><button onclick="removeRow(this)">Remove</button></td>
+      `;
+
+      tbody.appendChild(row);
+    }
+
+    function removeRow(button) {
+      const row = button.parentNode.parentNode;
+      row.parentNode.removeChild(row);
+      calculatePercentages();
+    }
+
+    function calculatePercentages() {
+      const tbody = document.getElementById("marksBody");
+      const rows = tbody.getElementsByTagName("tr");
+
+      let totalObtained = 0;
+      let totalPossible = 0;
+
+      for (let row of rows) {
+        const inputs = row.getElementsByTagName("input");
+        const obtained = parseFloat(inputs[1].value) || 0;
+        const total = parseFloat(inputs[2].value) || 0;
+        const percentageCell = row.querySelector(".subject-percentage");
+
+        let percent = 0;
+        if (total > 0) {
+          percent = (obtained / total) * 100;
+        }
+
+        percentageCell.textContent = `${percent.toFixed(2)}%`;
+
+        totalObtained += obtained;
+        totalPossible += total;
+      }
+
+      const overall = totalPossible > 0 ? (totalObtained / totalPossible) * 100 : 0;
+      document.getElementById("overallPercentage").textContent = `Overall Percentage: ${overall.toFixed(2)}%`;
+    }
+
+    function saveMarks() {
+      const studentID = document.getElementById("studentID").value.trim();
+      const rows = document.getElementById("marksBody").getElementsByTagName("tr");
+      const statusMsg = document.getElementById("statusMsg");
+
+      if (!studentID) {
+        statusMsg.textContent = "Student ID is required.";
+        statusMsg.className = "error";
+        return;
+      }
+
+      const subjects = [];
+
+      for (let row of rows) {
+        const inputs = row.getElementsByTagName("input");
+        const subjectName = inputs[0].value.trim();
+        const marksObtained = parseFloat(inputs[1].value) || 0;
+        const totalMarks = parseFloat(inputs[2].value) || 0;
+
+        if (!subjectName || totalMarks <= 0) {
+          statusMsg.textContent = "Please fill all subject details correctly.";
+          statusMsg.className = "error";
+          return;
+        }
+
+        subjects.push({
+          subject: subjectName,
+          marksObtained,
+          totalMarks,
+          percentage: ((marksObtained / totalMarks) * 100).toFixed(2)
+        });
+      }
+
+      const totalObtained = subjects.reduce((sum, s) => sum + s.marksObtained, 0);
+      const totalPossible = subjects.reduce((sum, s) => sum + s.totalMarks, 0);
+      const overallPercentage = totalPossible > 0 ? (totalObtained / totalPossible) * 100 : 0;
+
+      const record = {
+        studentID,
+        subjects,
+        overallPercentage: overallPercentage.toFixed(2)
+      };
+
+      const records = JSON.parse(localStorage.getItem("marksRecords") || "[]");
+      const existingIndex = records.findIndex(r => r.studentID === studentID);
+      if (existingIndex !== -1) {
+        records[existingIndex] = record; // Update
+      } else {
+        records.push(record); // Insert
+      }
+
+      localStorage.setItem("marksRecords", JSON.stringify(records));
+
+      statusMsg.textContent = "Marks saved successfully!";
+      statusMsg.className = "success";
+    }
+  </script>
+</body>
+</html>

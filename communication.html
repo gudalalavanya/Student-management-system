@@ -1,0 +1,51 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Communication</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Send Message</h2>
+
+    <input type="text" id="studentID" placeholder="Enter your Student ID" required>
+    <input type="text" id="mobileNumber" placeholder="Enter Mobile Number" required>
+    <textarea id="message" placeholder="Enter message..." required></textarea>
+
+    <button onclick="sendMessage()">Send</button>
+    <div id="chatBox"></div>
+    <a href="index.html">&larr; Back to Dashboard</a>
+  </div>
+
+  <script>
+    function sendMessage() {
+      const id = document.getElementById("studentID").value.trim();
+      const mobile = document.getElementById("mobileNumber").value.trim();
+      const msg = document.getElementById("message").value.trim();
+      const students = JSON.parse(localStorage.getItem("students") || "[]");
+
+      if (!id || !mobile || !msg) {
+        return alert("Please fill in all fields including mobile number.");
+      }
+
+      const student = students.find(s => s.studentID === id);
+      if (!student) return alert("Student not found");
+
+      const p = document.createElement("p");
+      p.innerText = `${student.name || "Student"} (${id}) [Mobile: ${mobile}]: ${msg}`;
+      p.style.background = "#e8f0ff";
+      p.style.padding = "8px";
+      p.style.borderRadius = "5px";
+      p.style.marginTop = "5px";
+
+      document.getElementById("chatBox").appendChild(p);
+
+      document.getElementById("studentID").value = "";
+      document.getElementById("mobileNumber").value = "";
+      document.getElementById("message").value = "";
+    }
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,128 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance Tracking</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>Mark Attendance</h2>
+    <input type="text" id="attendanceID" placeholder="Enter student ID">
+    <select id="attendanceStatus">
+      <option value="present">Present</option>
+      <option value="absent">Absent</option>
+    </select>
+    <button onclick="markAttendance()">Mark Attendance</button>
+    <button onclick="showAllAttendance()">Show Attendance Overview</button>
+
+    <canvas id="attendanceGraph"></canvas>
+    <div id="summaryBox"></div>
+
+    <a href="index.html">&larr; Back to Dashboard</a>
+  </div>
+
+  <script>
+    let attendanceChart = null;
+
+    function markAttendance() {
+      const studentID = document.getElementById("attendanceID").value.trim();
+      const status = document.getElementById("attendanceStatus").value;
+      const students = JSON.parse(localStorage.getItem("students") || "[]");
+
+      const student = students.find(s => s.studentID === studentID);
+      if (!student) return alert("Student not found");
+
+      if (student.presentCount === undefined) student.presentCount = 0;
+      if (student.totalClasses === undefined) student.totalClasses = 0;
+
+      student.totalClasses += 1;
+      if (status === "present") {
+        student.presentCount += 1;
+      }
+
+      localStorage.setItem("students", JSON.stringify(students));
+
+      updateSingleAttendanceGraph(student);
+      alert(`Attendance marked as ${status} for ${studentID}`);
+    }
+
+    function updateSingleAttendanceGraph(student) {
+      const percentage = (student.presentCount / student.totalClasses) * 100;
+      const absentCount = student.totalClasses - student.presentCount;
+
+      renderChart(
+        [student.name || student.studentID],
+        [percentage],
+        'Individual Attendance'
+      );
+
+      showSummary(student.totalClasses, student.presentCount, absentCount);
+    }
+
+    function showAllAttendance() {
+      const students = JSON.parse(localStorage.getItem("students") || "[]");
+      const labels = [];
+      const data = [];
+
+      students.forEach(s => {
+        if (s.totalClasses && s.presentCount !== undefined) {
+          labels.push(s.name || s.studentID);
+          data.push((s.presentCount / s.totalClasses) * 100);
+        }
+      });
+
+      if (labels.length === 0) {
+        return alert("No attendance data found.");
+      }
+
+      renderChart(labels, data, 'Attendance % of All Students');
+      document.getElementById("summaryBox").innerHTML = ''; // Clear summary when showing all
+    }
+
+    function showSummary(total, present, absent) {
+      document.getElementById("summaryBox").innerHTML = `
+        <p><strong>Total Classes:</strong> ${total}</p>
+        <p><strong>Present:</strong> ${present}</p>
+        <p><strong>Absent:</strong> ${absent}</p>
+      `;
+    }
+
+    function renderChart(labels, data, title) {
+      const ctx = document.getElementById('attendanceGraph').getContext('2d');
+
+      if (attendanceChart) {
+        attendanceChart.destroy();
+      }
+
+      attendanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: title,
+            data: data,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              title: {
+                display: true,
+                text: 'Attendance %'
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
+

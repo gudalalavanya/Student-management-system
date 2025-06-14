@@ -1,0 +1,113 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Enroll Student</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Extra styles for better UX */
+    input:required {
+      border-left: 5px solid #ff6666;
+    }
+
+    #parentMobile {
+      background-color: #fffdf0;
+      border-color: #ffcc80;
+    }
+
+    #status.notification {
+      background-color: #e6ffe6;
+      color: #006600;
+      border: 1px solid #99cc99;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    #status.error {
+      background-color: #ffe6e6;
+      color: #cc0000;
+      border: 1px solid #ff9999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Enroll New Student</h2>
+
+    <input type="text" id="studentID" placeholder="Enter student ID" required>
+    <input type="text" id="studentName" placeholder="Enter student name" required>
+    <input type="text" id="parentMobile" placeholder="Enter Parent's Mobile Number" required>
+    <input type="number" id="totalClasses" placeholder="Enter Total Classes" required>
+    <input type="number" id="presentCount" placeholder="Enter Present Count" required>
+    <input type="number" id="attendance" placeholder="Enter Attendance Percentage (optional)">
+
+    <button onclick="enrollStudent()">Enroll</button>
+    <p id="status"></p>
+
+    <a href="index.html">&larr; Back to Dashboard</a>
+  </div>
+
+  <script>
+    function enrollStudent() {
+      const id = document.getElementById("studentID").value.trim();
+      const name = document.getElementById("studentName").value.trim();
+      const parentMobile = document.getElementById("parentMobile").value.trim();
+      const totalClasses = parseInt(document.getElementById("totalClasses").value);
+      const presentCount = parseInt(document.getElementById("presentCount").value);
+      const attendance = parseFloat(document.getElementById("attendance").value);
+      const statusBox = document.getElementById("status");
+
+      if (!id || !name || !parentMobile || isNaN(totalClasses) || isNaN(presentCount)) {
+        statusBox.innerText = "All fields including Parent's Mobile Number are mandatory.";
+        statusBox.className = "error";
+        return;
+      }
+
+      if (presentCount > totalClasses) {
+        statusBox.innerText = "Present Count cannot be greater than Total Classes.";
+        statusBox.className = "error";
+        return;
+      }
+
+      const attendancePercentage = !isNaN(attendance)
+        ? attendance
+        : (presentCount / totalClasses) * 100;
+
+      const students = JSON.parse(localStorage.getItem("students") || "[]");
+
+      if (students.some(s => s.studentID === id)) {
+        statusBox.innerText = "Student ID already exists.";
+        statusBox.className = "error";
+        return;
+      }
+
+      students.push({
+        studentID: id,
+        name: name,
+        parentMobile: parentMobile,
+        totalClasses: totalClasses,
+        presentCount: presentCount,
+        attendance: attendancePercentage.toFixed(2),
+        cgpa: null,
+        marks: null
+      });
+
+      localStorage.setItem("students", JSON.stringify(students));
+
+      statusBox.innerText = `Student "${name}" enrolled successfully!`;
+      statusBox.className = "notification";
+
+      // Clear input fields
+      document.getElementById("studentID").value = "";
+      document.getElementById("studentName").value = "";
+      document.getElementById("parentMobile").value = "";
+      document.getElementById("totalClasses").value = "";
+      document.getElementById("presentCount").value = "";
+      document.getElementById("attendance").value = "";
+    }
+  </script>
+</body>
+</html>
+
