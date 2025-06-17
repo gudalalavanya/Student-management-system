@@ -196,8 +196,6 @@
       }
 
       const overallPercentage = calculatePercentages();
-
-      // Update student in localStorage
       const students = JSON.parse(localStorage.getItem("students") || "[]");
       const student = students.find(s => s.studentID === studentID);
       if (!student) {
