@@ -5,7 +5,6 @@
   <title>Enroll Student</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Extra styles for better UX */
     input:required {
       border-left: 5px solid #ff6666;
     }
@@ -98,8 +97,6 @@
 
       statusBox.innerText = `Student "${name}" enrolled successfully!`;
       statusBox.className = "notification";
-
-      // Clear input fields
       document.getElementById("studentID").value = "";
       document.getElementById("studentName").value = "";
       document.getElementById("parentMobile").value = "";
